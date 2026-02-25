@@ -28,6 +28,7 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 	const [unlockedIds, setUnlockedIds] = useState<Set<string>>(() => 
 		new Set(achievements?.filter(a => a.date_unlocked).map(a => a.achievement_id) || [])
 	);
+	const [pendingChanges, setPendingChanges] = useState<{ locked: string[], unlocked: string[] }>({ locked: [], unlocked: [] });
 
 	const toggleAchievement = (id: string) => {
 		setUnlockedIds(prev => {
@@ -35,6 +36,18 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 			next.has(id) ? next.delete(id) : next.add(id);
 			return next;
 		});
+	};
+
+	const handleSaveClick = () => {
+		const locked = achievements?.filter(a => !a.date_unlocked && unlockedIds.has(a.achievement_id)).map(a => a.achievement_id) || [];
+		const unlocked = achievements?.filter(a => a.date_unlocked && !unlockedIds.has(a.achievement_id)).map(a => a.achievement_id) || [];
+		if (locked.length === 0 && unlocked.length === 0) return;
+		setPendingChanges({ locked, unlocked });
+	};
+
+	const confirmSave = () => {
+		onSave(game, pendingChanges.locked, pendingChanges.unlocked);
+		setPendingChanges({ locked: [], unlocked: [] });
 	};
 
 	return (
@@ -47,15 +60,12 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 						</button>
 						<h1 className="text-2xl font-bold">{game.title}</h1>
 					</div>
-					<button onClick={() => {
-						const locked = achievements?.filter(a => !a.date_unlocked && unlockedIds.has(a.achievement_id)).map(a => a.achievement_id) || [];
-						const unlocked = achievements?.filter(a => a.date_unlocked && !unlockedIds.has(a.achievement_id)).map(a => a.achievement_id) || [];
-						onSave(game, locked, unlocked);
-					}} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+					<button onClick={handleSaveClick} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
 						Save
 					</button>
 				</div>
 			</header>
+			{pendingChanges.locked.length == 0 && pendingChanges.unlocked.length == 0 ? (
 			<div className="p-4 space-y-2">
 				{achievements === null ? (
 					<div className="bg-white rounded-lg shadow p-8 text-center">
@@ -90,6 +100,64 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 					))
 				)}
 			</div>
+			)}
+			{pendingChanges.locked.length > 0 || pendingChanges.unlocked.length > 0 ? (
+				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+					<div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+						<div className="p-6 border-b">
+							<h2 className="text-xl font-bold">Confirm Changes</h2>
+						</div>
+						<div className="p-6 overflow-y-auto flex-1">
+							{pendingChanges.locked.length > 0 && (
+								<div className="mb-4">
+									<h3 className="font-semibold text-green-700 mb-2">Achievements to Unlock ({pendingChanges.locked.length}):</h3>
+									<div className="space-y-2">
+										{pendingChanges.locked.map(id => {
+											const ach = achievements?.find(a => a.achievement_id === id);
+											return ach ? (
+												<div key={id} className="flex gap-3 items-center bg-green-50 p-3 rounded">
+													<img src={ach.image_url_unlocked} alt={ach.name} className="w-12 h-12 rounded" />
+													<div>
+														<p className="font-medium">{ach.name}</p>
+														<p className="text-sm text-gray-600">{ach.description}</p>
+													</div>
+												</div>
+											) : null;
+										})}
+									</div>
+								</div>
+							)}
+							{pendingChanges.unlocked.length > 0 && (
+								<div>
+									<h3 className="font-semibold text-red-700 mb-2">Achievements to Lock ({pendingChanges.unlocked.length}):</h3>
+									<div className="space-y-2">
+										{pendingChanges.unlocked.map(id => {
+											const ach = achievements?.find(a => a.achievement_id === id);
+											return ach ? (
+												<div key={id} className="flex gap-3 items-center bg-red-50 p-3 rounded">
+													<img src={ach.image_url_locked} alt={ach.name} className="w-12 h-12 rounded" />
+													<div>
+														<p className="font-medium">{ach.name}</p>
+														<p className="text-sm text-gray-600">{ach.description}</p>
+													</div>
+												</div>
+											) : null;
+										})}
+									</div>
+								</div>
+							)}
+						</div>
+						<div className="p-6 border-t flex gap-3 justify-end">
+							<button onClick={() => setShowConfirm(false)} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+								Cancel
+							</button>
+							<button onClick={confirmSave} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+								Confirm
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }
