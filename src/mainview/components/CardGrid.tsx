@@ -22,7 +22,7 @@ export default function CardGrid({ cards, onCardClick }: CardGridProps) {
 						<img
 							src={card.image}
 							alt={card.title}
-							className="w-full aspect-square object-cover"
+							className="w-full aspect-[16/9] object-cover"
 						/>
 						<div className="p-3">
 							<p className="text-sm font-medium text-gray-800 truncate">

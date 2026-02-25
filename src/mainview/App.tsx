@@ -21,19 +21,47 @@ function App() {
 	const electrobun = new Electrobun.Electroview({ rpc });
 
 	useEffect(() => {
-		electrobun.rpc?.request.getGameList({}).then(({ games, error }) => {
+		const fetchGameDetails = async () => {
+			const { games, error } = await electrobun.rpc?.request.getGameList({});
 			if (error) {
 				setError(error);
 				setIsLoading(false);
 				return;
 			}
-			setCards(games.map(gameID => ({
+
+			const initialCards = games.map(gameID => ({
 				id: gameID,
 				image: "views://mainview/assets/game-placeholder.png",
 				title: `Game ${gameID}`,
-			})));
+			}));
+			setCards(initialCards);
 			setIsLoading(false);
-		});
+
+			const gamesQueue = [...games];
+
+			const processNext = async () => {
+				while (gamesQueue.length > 0) {
+					const gameID = gamesQueue.shift()!;
+					const details = await electrobun.rpc?.request.getGameDetails({ gameID });
+
+					if (details === null) {
+						setCards(prev => prev.filter(card => card.id !== gameID));
+					} else {
+						setCards(prev => prev.map(card =>
+							card.id === gameID ? {
+								id: gameID,
+								image: details.image,
+								title: details.title
+							} : card
+						));
+					}
+				}
+			};
+
+			Promise.all(Array(6).fill(null).map(() => processNext()));
+		};
+
+		fetchGameDetails();
 	}, []);
 
 	const filteredCards = cards.filter((card) =>
