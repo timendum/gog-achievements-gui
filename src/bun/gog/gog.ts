@@ -1,7 +1,6 @@
 import { Achievement, AchievementsResponse, ProductData, ProductDetails, AuthResponse, GetGamesResponse, GameDetail } from './types';
 import { getProductDataFromConfig, saveProductDataToConfig } from './config';
 import { getAuth } from './auth';
-import { logf } from './logger';
 
 async function getProductData(productID: number): Promise<{ clientID: string; clientSecret: string }> {
   const cached = await getProductDataFromConfig(productID);
@@ -23,7 +22,7 @@ async function getProductData(productID: number): Promise<{ clientID: string; cl
 
   validBuilds.sort((a, b) => b.date_published.localeCompare(a.date_published));
   const latestBuildID = validBuilds[0].id;
-  logf('Found latest build ID: %d (published: %s)', latestBuildID, validBuilds[0].date_published);
+  console.log('Found latest build ID:', latestBuildID, '(published:', validBuilds[0].date_published + ')');
 
   const buildResp = await fetch(`https://www.gogdb.org/data/products/${productID}/builds/${latestBuildID}.json`);
   if (!buildResp.ok) {
@@ -31,14 +30,14 @@ async function getProductData(productID: number): Promise<{ clientID: string; cl
   }
 
   const buildDetails: ProductDetails = await buildResp.json();
-  logf('Successfully retrieved client ID and secret');
+  console.log('Successfully retrieved client ID and secret');
 
   await saveProductDataToConfig(productID, buildDetails);
   return { clientID: buildDetails.clientId, clientSecret: buildDetails.clientSecret };
 }
 
 export async function getAchievements(productID: number, userID: string, accessToken: string): Promise<Achievement[]> {
-  logf('Fetching achievements for product ID: %d, user ID: %s', productID, userID);
+  console.log('Fetching achievements for product ID:', productID, 'user ID:', userID);
   const { clientID } = await getProductData(productID);
 
   const resp = await fetch(`https://gameplay.gog.com/clients/${clientID}/users/${userID}/achievements`, {
@@ -54,12 +53,12 @@ export async function getAchievements(productID: number, userID: string, accessT
   }
 
   const achResp: AchievementsResponse = await resp.json();
-  logf('Successfully retrieved %d achievements', achResp.items.length);
+  console.log('Successfully retrieved', achResp.items.length, 'achievements');
   return achResp.items;
 }
 
 export async function unlockAchievement(productID: number, userID: string, achievementID: string, refreshToken: string, dateUnlocked?: Date): Promise<void> {
-  logf('Attempting to unlock achievement: %s for user: %s, product: %d', achievementID, userID, productID);
+  console.log('Attempting to unlock achievement:', achievementID, 'for user:', userID, 'product:', productID);
 
   const { clientID, clientSecret } = await getProductData(productID);
   const authResp = await getAuth(refreshToken, clientID, clientSecret);
@@ -83,7 +82,7 @@ export async function unlockAchievement(productID: number, userID: string, achie
   }
 }
 
-export async function listOwnedGameIDs(authResp: AuthResponse): Promise<number[] | null> {
+export async function listOwnedGameIDs(authResp: AuthResponse): Promise<number[]> {
   const resp = await fetch('https://embed.gog.com/user/data/games', {
     headers: {
       'Authorization': `Bearer ${authResp.access_token}`
@@ -92,12 +91,11 @@ export async function listOwnedGameIDs(authResp: AuthResponse): Promise<number[]
 
   if (!resp.ok) {
     const text = await resp.text();
-    logf('Failed to list games - status code: %d, response: %s', resp.status, text);
-    return null;
+    throw new Error(`Failed to list games - status code: ${resp.status}, response: ${text}`);
   }
 
   const getGames: GetGamesResponse = await resp.json();
-  logf('Successfully retrieved %d game ids', getGames.owned.length);
+  console.log('Successfully retrieved', getGames.owned.length, 'game ids');
   return getGames.owned;
 }
 
@@ -105,13 +103,13 @@ export async function getGameDetail(productID: number): Promise<GameDetail | nul
   const resp = await fetch(`https://www.gogdb.org/data/products/${productID}/product.json`);
 
   if (resp.status === 404) {
-    logf('Game %d not found', productID);
+    console.log('Game', productID, 'not found');
     return null;
   }
 
   if (!resp.ok) {
     const text = await resp.text();
-    logf('Failed to get game details for %d - status code: %d, response: %s', productID, resp.status, text);
+    console.log('Failed to get game details for', productID, '- status code:', resp.status, 'response:', text);
     return null;
   }
 

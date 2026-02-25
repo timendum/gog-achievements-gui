@@ -2,14 +2,13 @@ import type { ElectrobunConfig } from "electrobun";
 
 export default {
 	app: {
-		name: "vanilla-vite",
-		identifier: "vanillavite.electrobun.dev",
+		name: "gog-achievements-gui",
+		identifier: "timendum.gog-achievements-gui",
 		version: "0.0.1",
 	},
 	build: {
 		copy: {
-			"dist/index.html": "views/mainview/index.html",
-			"dist/assets": "views/mainview/assets",
+            "assets/": "views/mainview/assets/",
 		},
 		watchIgnore: ["dist/**"],
 		mac: {
