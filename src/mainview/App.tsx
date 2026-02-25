@@ -14,7 +14,7 @@ function App() {
 	const [cards, setCards] = useState<GameCard[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedGame, setSelectedGame] = useState<number | null>(null);
-	const [achievements, setAchievements] = useState<AchievementRPCType[]>([]);
+	const [achievements, setAchievements] = useState<AchievementRPCType[] | null>(null);
 
 	const rpc = Electroview.defineRPC<GogRPCType>({
 		handlers: {
@@ -95,7 +95,7 @@ function App() {
 	if (selectedGame) {
 		const card = cards.find(c => c.id === selectedGame);
 		if (card && card.loaded) {
-			return <GameDetail gameTitle={card.title} achievements={achievements} onBack={() => { setAchievements([]); setSelectedGame(null) }} />;
+			return <GameDetail gameTitle={card.title} achievements={achievements} onBack={() => { setAchievements(null); setSelectedGame(null) }} />;
 		}
 	}
 
