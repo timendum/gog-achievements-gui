@@ -1,18 +1,23 @@
+import { JSONParse, JSONStringify } from 'json-with-bigint';
+
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
-import { AuthResponse, ProductDetails } from './types';
+import { AuthResponse, GameDetail, ProductDetails } from './types';
 import os from 'os';
 
 function getAuthPath(): string {
-  return join(os.homedir(), 'AppData','Roaming', 'GOG-achievements-manager', 'auths.json');
+  return join(os.homedir(), 'AppData', 'Roaming', 'GOG-achievements-manager', 'auths.json');
 }
 
 function getProductPath(): string {
-  return join(os.homedir(), 'AppData','Roaming', 'GOG-achievements-manager', 'products.json');
+  return join(os.homedir(), 'AppData', 'Roaming', 'GOG-achievements-manager', 'products.json');
+}
+function getInfoPath(): string {
+  return join(os.homedir(), 'AppData', 'Roaming', 'GOG-achievements-manager', 'info.json');
 }
 
-function makeSureConfigDirExists() {  
-  const folderPath = join(os.homedir(), 'AppData','Roaming', 'GOG-achievements-manager');
+function makeSureConfigDirExists() {
+  const folderPath = join(os.homedir(), 'AppData', 'Roaming', 'GOG-achievements-manager');
   return mkdir(folderPath, { recursive: true });
 }
 
@@ -22,7 +27,7 @@ export async function getAccessFromConfig(clientID: string): Promise<AuthRespons
     const data = await readFile(configPath, 'utf-8');
     const config: Record<string, AuthResponse> = JSON.parse(data);
     const authResp = config[clientID];
-    
+
     if (!authResp) return null;
     if (!authResp.expire_time) {
       console.log('Cached token has no expiration time');
@@ -55,7 +60,7 @@ export async function saveAccessToConfig(clientID: string, authResp: AuthRespons
   try {
     const data = await readFile(configPath, 'utf-8');
     config = JSON.parse(data);
-  } catch {}
+  } catch { }
 
   const now = new Date();
   const expireTime = new Date(now.getTime() + authResp.expires_in * 1000);
@@ -74,9 +79,9 @@ export async function getProductDataFromConfig(productID: number): Promise<Produ
     const data = await readFile(configPath, 'utf-8');
     const config: Record<number, ProductDetails> = JSON.parse(data);
     const productDetails = config[productID];
-    
+
     if (!productDetails) return null;
-    
+
     console.log('Using cached access product data for', productID, ': client_id', productDetails.clientId, ', client_secret', productDetails.clientSecret);
     return productDetails;
   } catch (err: any) {
@@ -97,10 +102,49 @@ export async function saveProductDataToConfig(productID: number, productDetails:
   try {
     const data = await readFile(configPath, 'utf-8');
     config = JSON.parse(data);
-  } catch {}
+  } catch { }
 
   config[productID] = productDetails;
 
   await writeFile(configPath, JSON.stringify(config, null, 4));
   console.log('Updated cached product data for', productID);
+}
+
+export async function getProductInfoFromConfig(productID: number): Promise<GameDetail | null> {
+  const configPath = getInfoPath();
+  try {
+    const data = await readFile(configPath, 'utf-8');
+    const config: Record<number, GameDetail> = JSONParse(data);
+    const productInfo = config[productID];
+
+    if (!productInfo) return null;
+
+    console.log('Using cached access product data for', productID, ': title', productInfo.title);
+    return productInfo;
+  } catch (err: any) {
+    if (err.code === 'ENOENT') {
+      // console.log('ProductInfo file does not exist:', configPath);
+      return null;
+    }
+    console.log('Failed to read config file:', err.message);
+    return null;
+  }
+}
+
+export async function saveProductInfoToConfig(productInfos: Map<number, GameDetail>): Promise<void> {
+  await makeSureConfigDirExists();
+  const configPath = getInfoPath();
+  let config: Record<number, GameDetail> = {};
+
+  try {
+    const data = await readFile(configPath, 'utf-8');
+    config = JSONParse(data);
+  } catch { }
+
+  for (const [id, info] of productInfos.entries()) {
+    config[id] = info;
+  }
+
+  await writeFile(configPath, JSON.stringify(config, null, 4));
+  console.log('Updated cached product info for', [...productInfos.keys()].join(', '));
 }

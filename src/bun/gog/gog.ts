@@ -1,7 +1,7 @@
 import { JSONParse } from 'json-with-bigint';
 
 import { Achievement, AchievementsResponse, ProductData, ProductDetails, AuthResponse, GetGamesResponse, GameDetail } from './types';
-import { getProductDataFromConfig, saveProductDataToConfig } from './config';
+import { getProductDataFromConfig, saveProductDataToConfig, getProductInfoFromConfig, saveProductInfoToConfig } from './config';
 import { getAuth } from './auth';
 
 async function getProductData(productID: number): Promise<{ clientID: string; clientSecret: string }> {
@@ -103,7 +103,25 @@ export async function listOwnedGameIDs(authResp: AuthResponse): Promise<number[]
   return getGames.owned;
 }
 
+// Map to debounce cache saves
+const pendingCacheSaves = new Map<number, GameDetail>();
+let cacheTimer: NodeJS.Timeout | null = null;
+
+const CACHE_SAVE_DELAY_MS = 5000;
+
 export async function getGameDetail(productID: number): Promise<GameDetail | null> {
+  // Check cache first
+  const cached = await getProductInfoFromConfig(productID);
+  if (cached) {
+    return cached;
+  }
+  // Debounce cache save - cancel existing timer if present
+  const existing = pendingCacheSaves.get(productID);
+  if (existing) {
+    console.log('Using pending cached info for product ID:', productID);
+    return existing;
+  }
+
   const resp = await fetch(`https://www.gogdb.org/data/products/${productID}/product.json`);
 
   if (resp.status === 404) {
@@ -118,5 +136,27 @@ export async function getGameDetail(productID: number): Promise<GameDetail | nul
   }
 
   const gameDetail: GameDetail = await resp.json();
+  if (!gameDetail) {
+    return null;
+  }
+
+  // Schedule cache save after 15 seconds
+  if (cacheTimer) {
+    clearTimeout(cacheTimer);
+    cacheTimer = null;
+  }
+  cacheTimer = setTimeout(() => {
+    if (pendingCacheSaves.size > 0) {
+      saveProductInfoToConfig(pendingCacheSaves).catch(err => {
+        console.error('Failed to save game details to config:', err);
+      }).finally(() => {
+        cacheTimer = null;
+        pendingCacheSaves.clear();
+      });
+    }
+  }, CACHE_SAVE_DELAY_MS);
+
+  pendingCacheSaves.set(productID, gameDetail);
+
   return gameDetail;
 }
