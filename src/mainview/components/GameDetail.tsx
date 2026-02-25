@@ -25,8 +25,9 @@ const formatUnlockedDate = (dateString: string): string => {
 };
 
 export default function GameDetail({ game, achievements, onBack, onSave }: GameDetailProps) {
-	const initialUnlockedIds = new Set(achievements?.filter(a => a.date_unlocked).map(a => a.achievement_id) || []);
-	const [unlockedIds, setUnlockedIds] = useState<Set<string>>(initialUnlockedIds);
+	const [unlockedIds, setUnlockedIds] = useState<Set<string>>(() => 
+		new Set(achievements?.filter(a => a.date_unlocked).map(a => a.achievement_id) || [])
+	);
 
 	const toggleAchievement = (id: string) => {
 		setUnlockedIds(prev => {
