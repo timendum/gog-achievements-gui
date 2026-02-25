@@ -2,6 +2,7 @@ interface GameCard {
 	id: number;
 	image: string;
 	title: string;
+	loaded: boolean;
 }
 
 interface CardGridProps {
