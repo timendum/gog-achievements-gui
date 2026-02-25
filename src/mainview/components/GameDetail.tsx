@@ -1,20 +1,42 @@
-import { type AchievementRPCType } from "../../shared/types";
+import { useState } from "react";
+import type { AchievementRPCType, GameDetailsRPCType } from "../../shared/types";
 
 type GameDetailProps = {
-	gameTitle: string;
+	game: GameDetailsRPCType;
 	achievements: AchievementRPCType[] | null;
 	onBack: () => void;
+	onSave: (game: GameDetailsRPCType, lockedAchievements: string[], unlockedAchievements: string[]) => void;
 };
 
-export default function GameDetail({ gameTitle, achievements, onBack }: GameDetailProps) {
+export default function GameDetail({ game, achievements, onBack, onSave }: GameDetailProps) {
+	const initialUnlockedIds = new Set(achievements?.filter(a => a.date_unlocked).map(a => a.achievement_id) || []);
+	const [unlockedIds, setUnlockedIds] = useState<Set<string>>(initialUnlockedIds);
+
+	const toggleAchievement = (id: string) => {
+		setUnlockedIds(prev => {
+			const next = new Set(prev);
+			next.has(id) ? next.delete(id) : next.add(id);
+			return next;
+		});
+	};
+
 	return (
 		<div className="min-h-screen bg-gray-100">
 			<header className="bg-white shadow-sm p-4">
-				<div className="flex items-center gap-4">
-					<button onClick={onBack} className="text-gray-600 hover:text-gray-900">
-						← Back
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-4">
+						<button onClick={onBack} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+							← Back
+						</button>
+						<h1 className="text-2xl font-bold">{game.title}</h1>
+					</div>
+					<button onClick={() => {
+						const locked = achievements?.filter(a => !a.date_unlocked && unlockedIds.has(a.achievement_id)).map(a => a.achievement_id) || [];
+						const unlocked = achievements?.filter(a => a.date_unlocked && !unlockedIds.has(a.achievement_id)).map(a => a.achievement_id) || [];
+						onSave(game, locked, unlocked);
+					}} className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+						Save
 					</button>
-					<h1 className="text-2xl font-bold">{gameTitle}</h1>
 				</div>
 			</header>
 			<div className="p-4 space-y-2">
@@ -29,8 +51,14 @@ export default function GameDetail({ gameTitle, achievements, onBack }: GameDeta
 				) : (
 					achievements.map((achievement) => (
 						<div key={achievement.achievement_id} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
-							<img 
-								src={achievement.date_unlocked ? achievement.image_url_unlocked : achievement.image_url_locked} 
+							<input
+								type="checkbox"
+								checked={unlockedIds.has(achievement.achievement_id)}
+								onChange={() => toggleAchievement(achievement.achievement_id)}
+								className="w-5 h-5 cursor-pointer"
+							/>
+							<img
+								src={achievement.date_unlocked ? achievement.image_url_unlocked : achievement.image_url_locked}
 								alt={achievement.name}
 								className="w-16 h-16 rounded"
 							/>

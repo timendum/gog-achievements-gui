@@ -95,7 +95,9 @@ function App() {
 	if (selectedGame) {
 		const card = cards.find(c => c.id === selectedGame);
 		if (card && card.loaded) {
-			return <GameDetail gameTitle={card.title} achievements={achievements} onBack={() => { setAchievements(null); setSelectedGame(null) }} />;
+			return <GameDetail game={card} achievements={achievements} onBack={() => { setAchievements(null); setSelectedGame(null) }} onSave={(game, locked, unlocked) => {
+				console.log("Saving game", game, "with locked achievements", locked, "and unlocked achievements", unlocked);
+			}} />;
 		}
 	}
 
