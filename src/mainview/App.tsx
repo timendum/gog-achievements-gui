@@ -22,7 +22,12 @@ function App() {
 
 	useEffect(() => {
 		const fetchGameDetails = async () => {
-			const { games, error } = await electrobun.rpc?.request.getGameList({});
+			if (!electrobun.rpc) {
+				setError("RPC not initialized");
+				setIsLoading(false);
+				return;
+			}
+			const { games, error } = await electrobun.rpc.request.getGameList({});
 			if (error) {
 				setError(error);
 				setIsLoading(false);
@@ -44,7 +49,7 @@ function App() {
 					const gameID = gamesQueue.shift()!;
 					const details = await electrobun.rpc?.request.getGameDetails({ gameID });
 
-					if (details === null) {
+					if (!details) {
 						setCards(prev => prev.filter(card => card.id !== gameID));
 					} else {
 						setCards(prev => prev.map(card =>
