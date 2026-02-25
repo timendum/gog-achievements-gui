@@ -66,13 +66,13 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 					console.error('No auth response or refresh token available');
 					return [];
 				}
-				const achievements = await getAchievements(gameID, GOGAuth.authResponse.user_id, GOGAuth.refreshToken);
+				const achievements = await getAchievements(gameID, GOGAuth.authResponse.user_id, GOGAuth.authResponse.access_token);
 				return achievements.map(ach => ({
 					achievement_id: ach.achievement_id,
 					name: ach.name,
 					description: ach.description,
-					image_url_unlocked: `https://images.gog-statics.com/${ach.image_url_unlocked}`,
-					image_url_locked: `https://images.gog-statics.com/${ach.image_url_locked}`,
+					image_url_unlocked: ach.image_url_unlocked,
+					image_url_locked: ach.image_url_locked,
 					date_unlocked: ach.date_unlocked,
 				}));
 			},

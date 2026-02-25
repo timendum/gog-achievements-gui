@@ -15,6 +15,7 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.2.1",
     "electrobun": "^1.14.4",
+    "json-with-bigint": "^3.5.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.1",

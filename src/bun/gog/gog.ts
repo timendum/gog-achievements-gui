@@ -1,3 +1,5 @@
+import { JSONParse } from 'json-with-bigint';
+
 import { Achievement, AchievementsResponse, ProductData, ProductDetails, AuthResponse, GetGamesResponse, GameDetail } from './types';
 import { getProductDataFromConfig, saveProductDataToConfig } from './config';
 import { getAuth } from './auth';
@@ -9,11 +11,13 @@ async function getProductData(productID: number): Promise<{ clientID: string; cl
   }
 
   const resp = await fetch(`https://www.gogdb.org/data/products/${productID}/product.json`);
-  if (!resp.ok) { 
+  if (!resp.ok) {
     throw new Error(`Failed to get product data: ${resp.status}`);
   }
 
-  const productData: ProductData = await resp.json();
+  // build.id sometimes is a very large number that doesn't fit in JS number
+  // so we need to use a special JSON parser that can handle big integers
+  const productData: ProductData = JSONParse(await resp.text());
 
   const validBuilds = productData.builds.filter(build => build.date_published && build.listed);
   if (validBuilds.length === 0) {
@@ -29,7 +33,7 @@ async function getProductData(productID: number): Promise<{ clientID: string; cl
     throw new Error(`Failed to get build details - status code: ${buildResp.status}`);
   }
 
-  const buildDetails: ProductDetails = await buildResp.json();
+  const buildDetails: ProductDetails = JSONParse(await buildResp.text());
   console.log('Successfully retrieved client ID and secret');
 
   await saveProductDataToConfig(productID, buildDetails);

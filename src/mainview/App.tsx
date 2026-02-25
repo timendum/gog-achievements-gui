@@ -82,7 +82,8 @@ function App() {
 		const gameId = card.id;
 		setSelectedGame(card.id);
 		const achievements = await electrobun.rpc?.request.getGameAchievements({ gameID: card.id });
-		if (achievements && gameId == selectedGame) {
+		console.log("Fetched achievements for game", gameId, achievements);
+		if (achievements) {
 			setAchievements(achievements);
 		}
 	};
