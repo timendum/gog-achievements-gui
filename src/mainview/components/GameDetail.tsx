@@ -8,6 +8,22 @@ type GameDetailProps = {
 	onSave: (game: GameDetailsRPCType, lockedAchievements: string[], unlockedAchievements: string[]) => void;
 };
 
+const formatUnlockedDate = (dateString: string): string => {
+	try {
+		const date = new Date(dateString);
+		if (isNaN(date.getTime())) {
+			return dateString;
+		}
+		return date.toLocaleDateString(undefined, {
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit',
+		});
+	} catch {
+		return dateString;
+	}
+};
+
 export default function GameDetail({ game, achievements, onBack, onSave }: GameDetailProps) {
 	const initialUnlockedIds = new Set(achievements?.filter(a => a.date_unlocked).map(a => a.achievement_id) || []);
 	const [unlockedIds, setUnlockedIds] = useState<Set<string>>(initialUnlockedIds);
@@ -66,7 +82,7 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 								<h3 className="font-semibold">{achievement.name}</h3>
 								<p className="text-sm text-gray-600">{achievement.description}</p>
 								{achievement.date_unlocked && (
-									<p className="text-xs text-green-600 mt-1">Unlocked: {achievement.date_unlocked}</p>
+									<p className="text-xs text-green-600 mt-1">Unlocked: {formatUnlockedDate(achievement.date_unlocked)}</p>
 								)}
 							</div>
 						</div>
