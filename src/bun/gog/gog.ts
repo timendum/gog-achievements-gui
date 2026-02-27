@@ -61,15 +61,24 @@ export async function getAchievements(productID: number, userID: string, accessT
   return achResp.items;
 }
 
+// Date Digits Pad
+const ddp = (n: number) => String(n).padStart(2, "0");
+
 export async function unlockAchievement(productID: number, userID: string, achievementID: string, refreshToken: string, dateUnlocked?: Date): Promise<void> {
   console.log('Attempting to unlock achievement:', achievementID, 'for user:', userID, 'product:', productID);
 
   const { clientID, clientSecret } = await getProductData(productID);
   const authResp = await getAuth(refreshToken, clientID, clientSecret);
 
-  const body = {
-    date_unlocked: dateUnlocked ? dateUnlocked.toISOString().replace('Z', '+0000') : null
+  const body: { date_unlocked: string | null } = {
+    date_unlocked: null
   };
+
+  if (dateUnlocked) {
+    // format as "2006-01-02T15:04:05-0700"
+    body.date_unlocked = `${dateUnlocked.getUTCFullYear()}-${ddp(dateUnlocked.getUTCMonth() + 1)}-${ddp(dateUnlocked.getUTCDate())}` +
+      `T${ddp(dateUnlocked.getUTCHours())}:${ddp(dateUnlocked.getUTCMinutes())}:${ddp(dateUnlocked.getUTCSeconds())}+0000`;;
+  }
 
   const resp = await fetch(`https://gameplay.gog.com/clients/${clientID}/users/${userID}/achievements/${achievementID}`, {
     method: 'POST',
