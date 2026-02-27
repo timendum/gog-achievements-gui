@@ -17,11 +17,8 @@ export default {
 			"dist/index.html": "views/mainview/index.html",
 			"dist/assets": "views/mainview/assets",
 		},
-		mac: {
-			bundleCEF: false,
-		},
-		linux: {
-			bundleCEF: false,
+		release: {
+			generatePatch: false
 		},
 		win: {
 			bundleCEF: false,
