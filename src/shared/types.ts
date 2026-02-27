@@ -31,6 +31,10 @@ export type GogRPCType = {
             getGameAchievements: {
                 params: { gameID: number };
                 response: AchievementRPCType[];
+            };
+            saveAchievements: {
+                params: { locked: string[], unlocked: string[] };
+                response: boolean;
             }
         };
         messages: {};

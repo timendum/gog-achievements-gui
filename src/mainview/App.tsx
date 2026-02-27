@@ -92,12 +92,21 @@ function App() {
 		return <LoadingScreen error={error} />;
 	}
 
+	const saveHandler: Parameters<(typeof GameDetail)>[0]["onSave"] = async (game, locked, unlocked) => {
+		console.log("Saving game", game, "with locked achievements", locked, "and unlocked achievements", unlocked);
+		if (unlocked.length + locked.length == 0) {
+			return;
+		}
+		const resp = await electrobun.rpc?.request.saveAchievements({ unlocked, locked });
+		console.log("Save response", resp);
+		setSelectedGame(null);
+		setAchievements([]);
+	};
+
 	if (selectedGame) {
 		const card = cards.find(c => c.id === selectedGame);
 		if (card && card.loaded) {
-			return <GameDetail game={card} achievements={achievements} onBack={() => { setAchievements(null); setSelectedGame(null) }} onSave={(game, locked, unlocked) => {
-				console.log("Saving game", game, "with locked achievements", locked, "and unlocked achievements", unlocked);
-			}} />;
+			return <GameDetail game={card} achievements={achievements} onBack={() => { setAchievements(null); setSelectedGame(null) }} onSave={saveHandler} />;
 		}
 	}
 
