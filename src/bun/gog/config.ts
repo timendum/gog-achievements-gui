@@ -25,7 +25,7 @@ export async function getAccessFromConfig(clientID: string): Promise<AuthRespons
   const configPath = getAuthPath();
   try {
     const data = await readFile(configPath, 'utf-8');
-    const config: Record<string, AuthResponse> = JSON.parse(data);
+    const config: Record<string, AuthResponse> = JSONParse(data);
     const authResp = config[clientID];
 
     if (!authResp) return null;
@@ -59,7 +59,7 @@ export async function saveAccessToConfig(clientID: string, authResp: AuthRespons
 
   try {
     const data = await readFile(configPath, 'utf-8');
-    config = JSON.parse(data);
+    config = JSONParse(data);
   } catch { }
 
   const now = new Date();
@@ -69,7 +69,7 @@ export async function saveAccessToConfig(clientID: string, authResp: AuthRespons
 
   config[clientID] = authResp;
 
-  await writeFile(configPath, JSON.stringify(config, null, 4));
+  await writeFile(configPath, JSONStringify(config, null, 4));
   console.log('Updated cached auth for', clientID);
 }
 
@@ -77,7 +77,7 @@ export async function getProductDataFromConfig(productID: number): Promise<Produ
   const configPath = getProductPath();
   try {
     const data = await readFile(configPath, 'utf-8');
-    const config: Record<number, ProductDetails> = JSON.parse(data);
+    const config: Record<number, ProductDetails> = JSONParse(data);
     const productDetails = config[productID];
 
     if (!productDetails) return null;
@@ -101,12 +101,12 @@ export async function saveProductDataToConfig(productID: number, productDetails:
 
   try {
     const data = await readFile(configPath, 'utf-8');
-    config = JSON.parse(data);
+    config = JSONParse(data);
   } catch { }
 
   config[productID] = productDetails;
 
-  await writeFile(configPath, JSON.stringify(config, null, 4));
+  await writeFile(configPath, JSONStringify(config, null, 4));
   console.log('Updated cached product data for', productID);
 }
 
@@ -145,6 +145,6 @@ export async function saveProductInfoToConfig(productInfos: Map<number, GameDeta
     config[id] = info;
   }
 
-  await writeFile(configPath, JSON.stringify(config, null, 4));
+  await writeFile(configPath, JSONStringify(config, null, 4));
   console.log('Updated cached product info for', [...productInfos.keys()].join(', '));
 }
