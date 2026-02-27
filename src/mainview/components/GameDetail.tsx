@@ -14,11 +14,12 @@ const formatUnlockedDate = (dateString: string): string => {
 		if (isNaN(date.getTime())) {
 			return dateString;
 		}
-		return date.toLocaleDateString(undefined, {
-			year: 'numeric',
-			month: '2-digit',
-			day: '2-digit',
-		});
+		return date.toISOString().substring(0, 10);
+		// return date.toLocaleDateString(undefined, {
+		// 	year: 'numeric',
+		// 	month: '2-digit',
+		// 	day: '2-digit',
+		// });
 	} catch {
 		return dateString;
 	}
@@ -54,7 +55,7 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 
 	return (
 		<div className="min-h-screen bg-gray-100">
-			<header className="bg-white shadow-sm p-4">
+			<header className="bg-white shadow-sm p-4 sticky top-0 z-10">
 				<div className="flex items-center justify-between">
 					<div className="flex items-center gap-4">
 						<button onClick={onBack} className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
@@ -67,40 +68,40 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 					</button>
 				</div>
 			</header>
-				<div className="p-4 space-y-2">
-					{achievements === null ? (
-						<div className="bg-white rounded-lg shadow p-8 text-center">
-							<p className="text-gray-600">Loading achievements...</p>
-						</div>
-					) : achievements.length === 0 ? (
-						<div className="bg-white rounded-lg shadow p-8 text-center">
-							<p className="text-gray-900 text-xl font-bold">No achievements found for this game.</p>
-						</div>
-					) : (
-						achievements.map((achievement) => (
-							<div key={achievement.achievement_id} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
-								<input
-									type="checkbox"
-									checked={unlockedIds.has(achievement.achievement_id)}
-									onChange={() => toggleAchievement(achievement.achievement_id)}
-									className="w-5 h-5 cursor-pointer"
-								/>
-								<img
-									src={achievement.date_unlocked ? achievement.image_url_unlocked : achievement.image_url_locked}
-									alt={achievement.name}
-									className="w-16 h-16 rounded"
-								/>
-								<div className="flex-1">
-									<h3 className="font-semibold">{achievement.name}</h3>
-									<p className="text-sm text-gray-600">{achievement.description}</p>
-									{achievement.date_unlocked && (
-										<p className="text-xs text-green-600 mt-1">Unlocked: {formatUnlockedDate(achievement.date_unlocked)}</p>
-									)}
-								</div>
+			<div className="p-4 space-y-2">
+				{achievements === null ? (
+					<div className="bg-white rounded-lg shadow p-8 text-center">
+						<p className="text-gray-600">Loading achievements...</p>
+					</div>
+				) : achievements.length === 0 ? (
+					<div className="bg-white rounded-lg shadow p-8 text-center">
+						<p className="text-gray-900 text-xl font-bold">No achievements found for this game.</p>
+					</div>
+				) : (
+					achievements.map((achievement) => (
+						<div key={achievement.achievement_id} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
+							<input
+								type="checkbox"
+								checked={unlockedIds.has(achievement.achievement_id)}
+								onChange={() => toggleAchievement(achievement.achievement_id)}
+								className="w-5 h-5 cursor-pointer"
+							/>
+							<img
+								src={achievement.date_unlocked ? achievement.image_url_unlocked : achievement.image_url_locked}
+								alt={achievement.name}
+								className="w-16 h-16 rounded"
+							/>
+							<div className="flex-1">
+								<h3 className="font-semibold">{achievement.name}</h3>
+								<p className="text-sm text-gray-600">{achievement.description}</p>
+								{achievement.date_unlocked && (
+									<p className="text-xs text-green-600 mt-1">Unlocked: {formatUnlockedDate(achievement.date_unlocked)}</p>
+								)}
 							</div>
-						))
-					)}
-				</div>
+						</div>
+					))
+				)}
+			</div>
 			{pendingChanges.locked.length > 0 || pendingChanges.unlocked.length > 0 ? (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
 					<div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
