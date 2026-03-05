@@ -39,6 +39,7 @@ export default function GameDetail({
 		locked: string[];
 		unlocked: string[];
 	}>({ locked: [], unlocked: [] });
+	const [isSaving, setIsSaving] = useState(false);
 
 	useEffect(() => {
 		setUnlockedIds(
@@ -67,12 +68,17 @@ export default function GameDetail({
 			achievements
 				?.filter((a) => a.date_unlocked && !unlockedIds.has(a.achievement_id))
 				.map((a) => a.achievement_id) || [];
-		if (locked.length === 0 && unlocked.length === 0) return;
+		if (locked.length === 0 && unlocked.length === 0) {
+			return;
+		}
 		setPendingChanges({ locked, unlocked });
 	};
 
-	const confirmSave = () => {
-		onSave(game, pendingChanges.unlocked, pendingChanges.locked);
+	const confirmSave = async () => {
+		setIsSaving(true);
+		await onSave(game, pendingChanges.unlocked, pendingChanges.locked);
+		setIsSaving(false);
+		setPendingChanges({ locked: [], unlocked: [] });
 	};
 
 	return (
@@ -90,7 +96,7 @@ export default function GameDetail({
 						<h1 className="text-2xl font-bold">{game.title}</h1>
 					</div>
 					<button
-						type="button"
+						type="submit"
 						onClick={handleSaveClick}
 						className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
 					>
@@ -115,11 +121,12 @@ export default function GameDetail({
 							type="button"
 							key={achievement.achievement_id}
 							onClick={() => toggleAchievement(achievement.achievement_id)}
-							className="bg-white max-w-full rounded-lg shadow p-4 flex gap-4 items-center"
+							className="bg-white w-full rounded-lg shadow p-4 flex gap-4 items-center"
 						>
 							<input
 								type="checkbox"
 								checked={unlockedIds.has(achievement.achievement_id)}
+								onChange={() => {}}
 								className="w-5 h-5 cursor-pointer"
 							/>
 							<img
@@ -131,7 +138,7 @@ export default function GameDetail({
 								alt={achievement.name}
 								className="w-16 h-16 rounded"
 							/>
-							<div className="flex-1">
+							<div className="flex-1 text-left">
 								<h3 className="font-semibold">{achievement.name}</h3>
 								<p className="text-sm text-gray-600">
 									{achievement.description}
@@ -221,15 +228,21 @@ export default function GameDetail({
 						</div>
 						<div className="p-6 border-t flex gap-3 justify-end">
 							<button
-								type="button"
-								className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+								type="reset"
+								disabled={isSaving}
+								onClick={() => {
+									setIsSaving(false);
+									setPendingChanges({ locked: [], unlocked: [] });
+								}}
+								className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								Cancel
 							</button>
 							<button
 								type="submit"
+								disabled={isSaving}
 								onClick={confirmSave}
-								className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+								className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 							>
 								Confirm
 							</button>
