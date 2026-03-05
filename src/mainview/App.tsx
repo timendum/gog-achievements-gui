@@ -116,8 +116,8 @@ function App() {
 
 	const saveHandler: Parameters<typeof GameDetail>[0]["onSave"] = async (
 		game,
-		locked,
-		unlocked,
+		lock,
+		unlock,
 	) => {
 		if (!electrobun.rpc) {
 			setError("RPC not initialized");
@@ -126,23 +126,23 @@ function App() {
 		console.log(
 			"Saving game",
 			game,
-			"with locked achievements",
-			locked,
+			"with lock achievements",
+			lock,
 			"and unlocked achievements",
-			unlocked,
+			unlock,
 		);
-		if (unlocked.length + locked.length === 0) {
+		if (unlock.length + lock.length === 0) {
 			return;
 		}
 		const promises: Promise<string | null>[] = [];
-		for (const achievementID of locked) {
+		for (const achievementID of unlock) {
 			promises.push(
 				electrobun.rpc.request
 					.saveAchievements({ gameID: game.id, unlock: achievementID })
 					.then((res) => (res ? null : achievementID)),
 			);
 		}
-		for (const achievementID of unlocked) {
+		for (const achievementID of lock) {
 			promises.push(
 				electrobun.rpc.request
 					.saveAchievements({ gameID: game.id, lock: achievementID })
@@ -153,7 +153,9 @@ function App() {
 			const kos = (await Promise.all(promises)).filter(
 				(achievementID) => achievementID != null,
 			);
-			console.error("Achievements not saved: ", kos);
+			if (kos.length > 0) {
+				console.error("Achievements not saved: ", kos);
+			}
 		} finally {
 			setSelectedGame(null);
 			setAchievements([]);
