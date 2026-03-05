@@ -1,8 +1,13 @@
 import { BrowserView, BrowserWindow, Updater } from "electrobun/bun";
-import { GogRPCType } from "../shared/types";
+import type { GogRPCType } from "../shared/types";
 import { getAuth, getRefreshToken } from "./gog/auth";
-import { AuthResponse } from "./gog/types";
-import { getAchievements, getGameDetail, listOwnedGameIDs, unlockAchievement } from "./gog/gog";
+import {
+	getAchievements,
+	getGameDetail,
+	listOwnedGameIDs,
+	unlockAchievement,
+} from "./gog/gog";
+import type { AuthResponse } from "./gog/types";
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -59,15 +64,19 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 					id: gameDetail.id,
 					title: gameDetail.title,
 					image: `https://images.gog-statics.com/${gameDetail.image_logo}_product_tile_extended_432x243.webp`,
-				}
+				};
 			},
 			getGameAchievements: async ({ gameID }) => {
 				if (!GOGAuth.authResponse || !GOGAuth.refreshToken) {
-					console.error('No auth response or refresh token available');
+					console.error("No auth response or refresh token available");
 					return [];
 				}
-				const achievements = await getAchievements(gameID, GOGAuth.authResponse.user_id, GOGAuth.authResponse.access_token);
-				return achievements.map(ach => ({
+				const achievements = await getAchievements(
+					gameID,
+					GOGAuth.authResponse.user_id,
+					GOGAuth.authResponse.access_token,
+				);
+				return achievements.map((ach) => ({
 					achievement_id: ach.achievement_id,
 					name: ach.name,
 					description: ach.description,
@@ -78,7 +87,7 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 			},
 			saveAchievements: async (params) => {
 				if (!GOGAuth.authResponse || !GOGAuth.refreshToken) {
-					console.error('No auth response or refresh token available');
+					console.error("No auth response or refresh token available");
 					return false;
 				}
 				const gameID = params.gameID;
@@ -92,7 +101,13 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 						await unlockAchievement(gameID, user_id, unlock, refreshToken, now);
 					} else {
 						const { lock } = params;
-						await unlockAchievement(gameID, user_id, lock, refreshToken, undefined);
+						await unlockAchievement(
+							gameID,
+							user_id,
+							lock,
+							refreshToken,
+							undefined,
+						);
 					}
 					return true;
 				} catch (e) {
@@ -108,7 +123,7 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 // Create the main application window
 const url = await getMainViewUrl();
 
-// const mainWindow = 
+// const mainWindow =
 new BrowserWindow({
 	title: "GOG Achievements Manager",
 	url,

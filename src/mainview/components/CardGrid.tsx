@@ -15,7 +15,8 @@ export default function CardGrid({ cards, onCardClick }: CardGridProps) {
 		<div className="container mx-auto px-4 py-6">
 			<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 				{cards.map((card) => (
-					<div
+					<button
+						type="button"
 						key={card.id}
 						onClick={() => onCardClick(card)}
 						className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer hover:shadow-xl transition-shadow"
@@ -30,7 +31,7 @@ export default function CardGrid({ cards, onCardClick }: CardGridProps) {
 								{card.title}
 							</p>
 						</div>
-					</div>
+					</button>
 				))}
 			</div>
 		</div>

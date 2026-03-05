@@ -1,5 +1,5 @@
 import type { ElectrobunConfig } from "electrobun";
-import packageJson from "./package.json" assert { type: "json" };
+import packageJson from "./package.json";
 
 export default {
 	app: {
@@ -18,7 +18,7 @@ export default {
 			"dist/assets": "views/mainview/assets",
 		},
 		release: {
-			generatePatch: false
+			generatePatch: false,
 		},
 		win: {
 			bundleCEF: false,
