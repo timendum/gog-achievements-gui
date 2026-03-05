@@ -106,13 +106,19 @@ function App() {
 		const gameId = card.id;
 		setSelectedGame(card.id);
 		setIsLoading(true);
-		const achievements = await electrobun.rpc?.request.getGameAchievements({
-			gameID: card.id,
-		});
-		setIsLoading(false);
-		console.log("Fetched achievements for game", gameId, achievements);
-		if (achievements) {
-			setAchievements(achievements);
+		try {
+			const achievements = await electrobun.rpc?.request.getGameAchievements({
+				gameID: card.id,
+			});
+
+			setIsLoading(false);
+			console.log("Fetched achievements for game", gameId, achievements);
+			if (achievements) {
+				setAchievements(achievements);
+			}
+		} catch (e) {
+			console.error("Error fetching achievements for game", gameId, e);
+			setIsLoading(false);
 		}
 	};
 
