@@ -88,19 +88,30 @@ function App() {
 		}
 	};
 
-	if (isLoading || error) {
-		return <LoadingScreen error={error} />;
-	}
 
 	const saveHandler: Parameters<(typeof GameDetail)>[0]["onSave"] = async (game, locked, unlocked) => {
-		console.log("Saving game", game, "with locked achievements", locked, "and unlocked achievements", unlocked);
-		if (unlocked.length + locked.length == 0) {
+		if (!electrobun.rpc) {
+			setError("RPC not initialized");
 			return;
 		}
-		const resp = await electrobun.rpc?.request.saveAchievements({ unlocked, locked });
-		console.log("Save response", resp);
+		console.log("Saving game", game, "with locked achievements", locked, "and unlocked achievements", unlocked);
+		if (unlocked.length + locked.length === 0) {
+			return;
+		}
+		const promises: Promise<string | null>[] = [];
+		for (const achievementID of locked) {
+			promises.push(electrobun.rpc.request.saveAchievements({ gameID: game.id, unlock: achievementID }).then(res => res ? null : achievementID));
+		}
+		for (const achievementID of unlocked) {
+			promises.push(electrobun.rpc.request.saveAchievements({ gameID: game.id, lock: achievementID }).then(res => res ? null : achievementID));
+		}
+		try {
+			const kos = (await Promise.all(promises)).filter(achievementID => achievementID != null);
+			console.error("Not saved achievements: ", kos);
+		} finally {
 		setSelectedGame(null);
 		setAchievements([]);
+		}
 	};
 
 	if (selectedGame) {

@@ -2,7 +2,7 @@ import { BrowserView, BrowserWindow, Updater } from "electrobun/bun";
 import { GogRPCType } from "../shared/types";
 import { getAuth, getRefreshToken } from "./gog/auth";
 import { AuthResponse } from "./gog/types";
-import { getAchievements, getGameDetail, listOwnedGameIDs, } from "./gog/gog";
+import { getAchievements, getGameDetail, listOwnedGameIDs, unlockAchievement } from "./gog/gog";
 
 const DEV_SERVER_PORT = 5173;
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
@@ -44,7 +44,7 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 					return { games, error: null };
 				} catch (err) {
 					console.error("Failed to get refresh token:", err);
-					return { games: [], error: String(err)};
+					return { games: [], error: String(err) };
 				}
 			},
 			getGameDetails: async ({ gameID }) => {
@@ -75,6 +75,30 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 					image_url_locked: ach.image_url_locked,
 					date_unlocked: ach.date_unlocked,
 				}));
+			},
+			saveAchievements: async (params) => {
+				if (!GOGAuth.authResponse || !GOGAuth.refreshToken) {
+					console.error('No auth response or refresh token available');
+					return false;
+				}
+				const gameID = params.gameID;
+				const user_id = GOGAuth.authResponse.user_id;
+				const refreshToken = GOGAuth.refreshToken;
+				try {
+					if ("unlock" in params) {
+						const { unlock } = params;
+						const now = new Date(Date.now() - 10 * 1000); // 10 second
+						console.info(`saveAchievements - unlock: ${unlock}`);
+						await unlockAchievement(gameID, user_id, unlock, refreshToken, now);
+					} else {
+						const { lock } = params;
+						await unlockAchievement(gameID, user_id, lock, refreshToken, undefined);
+					}
+					return true;
+				} catch (e) {
+					console.error(e);
+					return false;
+				}
 			},
 		},
 		messages: {},

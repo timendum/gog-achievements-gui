@@ -5,7 +5,7 @@ type GameDetailProps = {
 	game: GameDetailsRPCType;
 	achievements: AchievementRPCType[] | null;
 	onBack: () => void;
-	onSave: (game: GameDetailsRPCType, lockedAchievements: string[], unlockedAchievements: string[]) => void;
+	onSave: (game: GameDetailsRPCType, lock: string[], unlock: string[]) => void;
 };
 
 const formatUnlockedDate = (dateString: string): string => {
@@ -49,8 +49,7 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 	};
 
 	const confirmSave = () => {
-		onSave(game, pendingChanges.locked, pendingChanges.unlocked);
-		setPendingChanges({ locked: [], unlocked: [] });
+		onSave(game, pendingChanges.unlocked, pendingChanges.locked);
 	};
 
 	return (

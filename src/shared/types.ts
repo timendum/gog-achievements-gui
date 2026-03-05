@@ -1,4 +1,4 @@
-import { RPCSchema } from "electrobun";
+import type { RPCSchema } from "electrobun";
 
 export type GameListRPCType = number[];
 
@@ -33,7 +33,7 @@ export type GogRPCType = {
                 response: AchievementRPCType[];
             };
             saveAchievements: {
-                params: { locked: string[], unlocked: string[] };
+                params: { gameID: number, unlock: string } | { gameID: number, lock: string };
                 response: boolean;
             }
         };
