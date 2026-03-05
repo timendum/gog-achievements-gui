@@ -1,18 +1,16 @@
-import Electrobun, { Electroview } from "electrobun/view";
 import { useEffect, useState } from "react";
-import type { AchievementRPCType, GogRPCType } from "../shared/types";
+import type { AchievementRPCType } from "../shared/types";
 import CardGrid, { type GameCard } from "./components/CardGrid";
 import GameDetail from "./components/GameDetail";
 import Header from "./components/Header";
 import LoadingScreen from "./components/LoadingScreen";
+import type { ElectrobunType } from "./electrobun";
 
-const rcp = Electroview.defineRPC<GogRPCType>({
-	maxRequestTime: 5 * 1000,
-	handlers: {},
-});
-const electrobun = new Electrobun.Electroview({ rpc: rcp });
+interface AppProps {
+	electrobun: ElectrobunType;
+}
 
-function App() {
+function App({ electrobun }: AppProps) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string>();
 	const [cards, setCards] = useState<GameCard[]>([]);
@@ -94,7 +92,7 @@ function App() {
 		};
 
 		fetchGameDetails().catch(console.log);
-	}, []);
+	}, [electrobun]);
 
 	const filteredCards = cards.filter(
 		(card) =>
@@ -189,7 +187,7 @@ function App() {
 				/>
 			);
 		} else {
-			// force loading
+			// force detail loading
 			electrobun.rpc?.request
 				.getGameDetails({ gameID: selectedGame })
 				.then((details) => {

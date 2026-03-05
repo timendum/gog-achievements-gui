@@ -8,7 +8,11 @@ type GameDetailProps = {
 	game: GameDetailsRPCType;
 	achievements: AchievementRPCType[] | null;
 	onBack: () => void;
-	onSave: (game: GameDetailsRPCType, lock: string[], unlock: string[]) => void;
+	onSave: (
+		game: GameDetailsRPCType,
+		lock: string[],
+		unlock: string[],
+	) => Promise<void>;
 };
 
 const formatUnlockedDate = (dateString: string): string => {
