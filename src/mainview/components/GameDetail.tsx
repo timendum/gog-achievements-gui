@@ -79,11 +79,10 @@ export default function GameDetail({ game, achievements, onBack, onSave }: GameD
 					</div>
 				) : (
 					achievements.map((achievement) => (
-						<div key={achievement.achievement_id} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
+						<div key={achievement.achievement_id} onClick={() => toggleAchievement(achievement.achievement_id)} className="bg-white rounded-lg shadow p-4 flex gap-4 items-center">
 							<input
 								type="checkbox"
 								checked={unlockedIds.has(achievement.achievement_id)}
-								onChange={() => toggleAchievement(achievement.achievement_id)}
 								className="w-5 h-5 cursor-pointer"
 							/>
 							<img
