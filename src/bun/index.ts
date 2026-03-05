@@ -97,8 +97,8 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 					if ("unlock" in params) {
 						const { unlock } = params;
 						const now = new Date(Date.now() - 10 * 1000); // 10 second
-						console.info(`saveAchievements - unlock: ${unlock}`);
 						await unlockAchievement(gameID, user_id, unlock, refreshToken, now);
+						console.info(`saveAchievements - unlocked: ${unlock}`);
 					} else {
 						const { lock } = params;
 						await unlockAchievement(
@@ -108,6 +108,7 @@ const gogRPC = BrowserView.defineRPC<GogRPCType>({
 							refreshToken,
 							undefined,
 						);
+						console.info(`saveAchievements - locked: ${lock}`);
 					}
 					return true;
 				} catch (e) {
