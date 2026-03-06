@@ -21,7 +21,7 @@ GOG Achievements Manager connects to your GOG account and allows you to:
 
 1. Download the latest release for Windows (x64)
 2. Extract the archive
-3. Run `gog-achievements-gui.exe`
+3. Run `bin\launcher.exe`
 
 ### Prerequisites
 
