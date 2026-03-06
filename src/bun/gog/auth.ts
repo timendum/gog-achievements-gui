@@ -2,10 +2,18 @@ import Registry from "winreg";
 import { getAccessFromConfig, saveAccessToConfig } from "./config";
 import type { AuthResponse } from "./types";
 
+/** GOG Galaxy client ID for API authentication */
 export const GALAXY_CLIENT_ID = "46899977096215655";
+/** GOG Galaxy client secret for API authentication */
 export const GALAXY_CLIENT_SECRET =
 	"9d85c43b1482497dbbce61f6e4aa173a433796eeae2ca8c5f6129f2dc4de46d9";
 
+/**
+ * Retrieves the GOG Galaxy refresh token from Windows Registry.
+ * 
+ * @returns The refresh token string
+ * @throws Error if GOG Galaxy is not installed or hasn't been launched
+ */
 export async function getRefreshToken(): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const regKey = new Registry({
@@ -33,6 +41,16 @@ export async function getRefreshToken(): Promise<string> {
 	});
 }
 
+/**
+ * Authenticates with GOG API using a refresh token.
+ * Returns access token.
+ * 
+ * @param refreshToken - The GOG refresh token from Galaxy client
+ * @param clientID - GOG client ID (defaults to GALAXY_CLIENT_ID)
+ * @param clientSecret - GOG client secret (defaults to GALAXY_CLIENT_SECRET)
+ * @returns Authentication response containing access token and expiration
+ * @throws Error if authentication fails
+ */
 export async function getAuth(
 	refreshToken: string,
 	clientID: string = GALAXY_CLIENT_ID,

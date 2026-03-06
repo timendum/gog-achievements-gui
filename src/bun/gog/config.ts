@@ -6,6 +6,21 @@ import { JSONParse, JSONStringify } from "json-with-bigint";
 
 import type { AuthResponse, GameDetail, ProductDetails } from "./types";
 
+/**
+ * Configuration manager for GOG Achievements Manager.
+ * Handles caching of authentication tokens, product details, and game information
+ * in the user's AppData/Roaming directory.
+ * 
+ * Entities:
+ * - Auth: cache `AuthResponse` (GOG Auth, general and for games)
+ * - Product: cache `ProductDetails` (client id and secret for games)
+ * - Info: cache `GameDetail` (Info for games)
+ */
+
+/**
+ * Returns the file path for AuthResponse.
+ * @returns Path to auths.json
+ */
 function getAuthPath(): string {
 	return join(
 		os.homedir(),
@@ -16,6 +31,10 @@ function getAuthPath(): string {
 	);
 }
 
+/**
+ * Returns the file path for  ProductDetails.
+ * @returns Path to products.json
+ */
 function getProductPath(): string {
 	return join(
 		os.homedir(),
@@ -25,6 +44,10 @@ function getProductPath(): string {
 		"products.json",
 	);
 }
+/**
+ * Returns the file path for GameDetails.
+ * @returns Path to info.json
+ */
 function getInfoPath(): string {
 	return join(
 		os.homedir(),
@@ -35,6 +58,10 @@ function getInfoPath(): string {
 	);
 }
 
+/**
+ * Ensures the configuration directory exists, creating it if necessary.
+ * @returns Promise that resolves when directory is confirmed to exist
+ */
 function makeSureConfigDirExists() {
 	const folderPath = join(
 		os.homedir(),
@@ -45,6 +72,11 @@ function makeSureConfigDirExists() {
 	return mkdir(folderPath, { recursive: true });
 }
 
+/**
+ * Retrieves a cached AuthResponse for the specified client ID.
+ * @param clientID - The GOG OAuth client ID
+ * @returns The cached auth response if valid and not expired, null otherwise
+ */
 export async function getAccessFromConfig(
 	clientID: string,
 ): Promise<AuthResponse | null> {
@@ -86,6 +118,12 @@ export async function getAccessFromConfig(
 	return null;
 }
 
+/**
+ * Saves an access token to the configuration cache.
+ * Automatically calculates and stores expiration time based on expires_in.
+ * @param clientID - The GOG OAuth client ID
+ * @param authResp - The authentication response to cache
+ */
 export async function saveAccessToConfig(
 	clientID: string,
 	authResp: AuthResponse,
@@ -110,6 +148,11 @@ export async function saveAccessToConfig(
 	console.log("Updated cached auth for", clientID);
 }
 
+/**
+ * Retrieves cached OAuth credentials for a specific game product.
+ * @param productID - The GOG product/game ID
+ * @returns The cached product details (client_id and client_secret) or null if not found
+ */
 export async function getProductDataFromConfig(
 	productID: number,
 ): Promise<ProductDetails | null> {
@@ -146,6 +189,11 @@ export async function getProductDataFromConfig(
 	return null;
 }
 
+/**
+ * Saves OAuth credentials for a game product to the configuration cache.
+ * @param productID - The GOG product/game ID
+ * @param productDetails - The product OAuth credentials to cache
+ */
 export async function saveProductDataToConfig(
 	productID: number,
 	productDetails: ProductDetails,
@@ -165,6 +213,11 @@ export async function saveProductDataToConfig(
 	console.log("Updated cached product data for", productID);
 }
 
+/**
+ * Retrieves cached game information for a specific product.
+ * @param productID - The GOG product/game ID
+ * @returns The cached game details (title, etc.) or null if not found
+ */
 export async function getProductInfoFromConfig(
 	productID: number,
 ): Promise<GameDetail | null> {
@@ -199,6 +252,10 @@ export async function getProductInfoFromConfig(
 	return null;
 }
 
+/**
+ * Saves game information for multiple products to the configuration cache.
+ * @param productInfos - Map of product IDs to their game details
+ */
 export async function saveProductInfoToConfig(
 	productInfos: Map<number, GameDetail>,
 ): Promise<void> {

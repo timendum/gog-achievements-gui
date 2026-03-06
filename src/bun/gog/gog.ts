@@ -16,6 +16,12 @@ import type {
 	ProductDetails,
 } from "./types";
 
+/**
+ * Retrieves client ID and secret for a GOG product by fetching build data from GOGDB.
+ * @param productID - The GOG product ID
+ * @returns clientID and clientSecret
+ * @throws Error if product data cannot be fetched or no valid builds exist
+ */
 async function getProductData(
 	productID: number,
 ): Promise<{ clientID: string; clientSecret: string }> {
@@ -70,6 +76,14 @@ async function getProductData(
 	};
 }
 
+/**
+ * Fetches all achievements for a specific game and user from GOG.
+ * @param productID - The GOG product ID
+ * @param userID - The GOG user ID
+ * @param accessToken - Valid GOG access token for authentication
+ * @returns Array of achievements with their unlock status and metadata
+ * @throws Error if the API request fails
+ */
 export async function getAchievements(
 	productID: number,
 	userID: string,
@@ -103,9 +117,23 @@ export async function getAchievements(
 	return achResp.items;
 }
 
-// Date Digits Pad
+/**
+ * Pads a number to 2 digits with leading zero.
+ * @param n - Number to pad
+ * @returns Zero-padded string representation
+ */
 const ddp = (n: number) => String(n).padStart(2, "0");
 
+/**
+ * Unlocks an achievement for a user by posting to GOG's API.
+ * If no date is provided, the achievement is locked.
+ * @param productID - The GOG product ID
+ * @param userID - The GOG user ID
+ * @param achievementID - The achievement identifier to unlock
+ * @param refreshToken - GOG refresh token
+ * @param dateUnlocked - Optional unlock date
+ * @throws Error if the unlock request fails
+ */
 export async function unlockAchievement(
 	productID: number,
 	userID: string,
@@ -154,6 +182,12 @@ export async function unlockAchievement(
 	}
 }
 
+/**
+ * Retrieves a list of all game IDs owned by the authenticated user.
+ * @param authResp - Authentication from GOG.
+ * @returns Array of product IDs for games owned by the user
+ * @throws Error if the API request fails
+ */
 export async function listOwnedGameIDs(
 	authResp: AuthResponse,
 ): Promise<number[]> {
@@ -181,6 +215,12 @@ let cacheTimer: NodeJS.Timeout | null = null;
 
 const CACHE_SAVE_DELAY_MS = 5000;
 
+/**
+ * Fetches detailed information about a game from GOGDB.
+ * Results are cached locally and saves are debounced to reduce disk I/O.
+ * @param productID - The GOG product ID
+ * @returns Game details object or null if game not found or request fails
+ */
 export async function getGameDetail(
 	productID: number,
 ): Promise<GameDetail | null> {
