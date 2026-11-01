@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
 	AchievementRPCType,
 	GameDetailsRPCType,
@@ -39,11 +39,35 @@ export default function GameDetail({
 	onSave,
 }: GameDetailProps) {
 	const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set());
+	const [changedIds, setChangedIds] = useState<Set<string>>(new Set());
 	const [pendingChanges, setPendingChanges] = useState<{
 		locked: string[];
 		unlocked: string[];
 	}>({ locked: [], unlocked: [] });
 	const [isSaving, setIsSaving] = useState(false);
+	const [searchQuery, setSearchQuery] = useState<string>();
+	const achievementStatuses = ["all", "unlocked", "locked", "changed"] as const;
+	const [statusFilter, setStatusFilter] = useState<typeof achievementStatuses[number]>("all");
+
+	const filteredAchievements: AchievementRPCType[] = useMemo(() =>
+		achievements?.filter(achievement => {
+			const query = searchQuery?.toLowerCase().trim();
+
+			const matchesQuery = !query
+				|| achievement.name.toLowerCase().includes(query)
+				|| achievement.description.toLowerCase().includes(query);
+
+			const isUnlocked = unlockedIds.has(achievement.achievement_id);
+			const isChanged = changedIds.has(achievement.achievement_id);
+
+			const matchesStatus = statusFilter === "all"
+				|| (statusFilter === "unlocked" && isUnlocked)
+				|| (statusFilter === "locked" && !isUnlocked)
+				|| (statusFilter === "changed" && isChanged);
+
+			return matchesQuery && matchesStatus;
+		}) || []
+		, [achievements, searchQuery, statusFilter, changedIds]);
 
 	useEffect(() => {
 		setUnlockedIds(
@@ -57,6 +81,11 @@ export default function GameDetail({
 
 	const toggleAchievement = (id: string) => {
 		setUnlockedIds((prev) => {
+			const next = new Set(prev);
+			next.has(id) ? next.delete(id) : next.add(id);
+			return next;
+		});
+		setChangedIds((prev) => {
 			const next = new Set(prev);
 			next.has(id) ? next.delete(id) : next.add(id);
 			return next;
@@ -83,6 +112,7 @@ export default function GameDetail({
 		await onSave(game, pendingChanges.unlocked, pendingChanges.locked);
 		setIsSaving(false);
 		setPendingChanges({ locked: [], unlocked: [] });
+		setChangedIds(new Set());
 	};
 
 	return (
@@ -109,6 +139,30 @@ export default function GameDetail({
 				</div>
 			</header>
 			<div className="p-4 space-y-2">
+				<div className="bg-white rounded-lg shadow p-4 space-y-3">
+					<input
+						type="search"
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						placeholder="Search..."
+						className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+					/>
+					<div className="flex gap-2">
+						{(achievementStatuses).map((filter) => (
+							<button
+								key={filter}
+								type="button"
+								onClick={() => setStatusFilter(filter)}
+								className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === filter
+									? "bg-blue-600 text-white"
+									: "bg-gray-100 text-gray-700 hover:bg-gray-200"
+									}`}
+							>
+								{filter.charAt(0).toUpperCase() + filter.slice(1)}
+							</button>
+						))}
+					</div>
+				</div>
 				{achievements === null ? (
 					<div className="bg-white rounded-lg shadow p-8 text-center">
 						<p className="text-gray-600">Loading achievements...</p>
@@ -119,8 +173,14 @@ export default function GameDetail({
 							No achievements found for this game.
 						</p>
 					</div>
+				) : filteredAchievements.length === 0 ? (
+					<div className="bg-white rounded-lg shadow p-8 text-center">
+						<p className="text-gray-600">
+							No achievements match your search or filter.
+						</p>
+					</div>
 				) : (
-					achievements.map((achievement) => (
+					filteredAchievements.map((achievement) => (
 						<button
 							type="button"
 							key={achievement.achievement_id}
@@ -130,7 +190,7 @@ export default function GameDetail({
 							<input
 								type="checkbox"
 								checked={unlockedIds.has(achievement.achievement_id)}
-								onChange={() => {}}
+								onChange={() => { }}
 								className="w-5 h-5 cursor-pointer"
 							/>
 							<img
@@ -158,7 +218,7 @@ export default function GameDetail({
 				)}
 			</div>
 			{pendingChanges.locked.length > 0 ||
-			pendingChanges.unlocked.length > 0 ? (
+				pendingChanges.unlocked.length > 0 ? (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
 					<div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
 						<div className="p-6 border-b">
